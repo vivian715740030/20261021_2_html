@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101720">
+  <title>考試大鐘</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: #101720;
+      color: #f4f7fb;
+      font-synthesis: none;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 50% 22%, rgba(44, 68, 91, .38), transparent 58%),
+        #101720;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1180px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: clamp(20px, 4vw, 48px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: clamp(28px, 5vh, 54px);
+    }
+
+    .clock-panel {
+      text-align: center;
+    }
+
+    .date {
+      margin: 0 0 12px;
+      color: #c2cfdd;
+      font-size: clamp(1.1rem, 2.6vw, 1.75rem);
+      letter-spacing: .12em;
+    }
+
+    .clock {
+      margin: 0;
+      color: #fff;
+      font-family: "Cascadia Mono", "Consolas", "SFMono-Regular", monospace;
+      font-size: clamp(4.2rem, 17vw, 12.5rem);
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      letter-spacing: .035em;
+      line-height: 1.06;
+      text-shadow: 0 0 34px rgba(115, 190, 255, .18);
+    }
+
+    .exam-info {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .info-card {
+      min-height: 112px;
+      padding: 18px 20px;
+      border: 1px solid rgba(188, 207, 228, .16);
+      border-radius: 14px;
+      background: rgba(24, 35, 48, .84);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .info-label {
+      color: #aab9c9;
+      font-size: .95rem;
+      letter-spacing: .1em;
+    }
+
+    .info-value {
+      color: #f5f8fc;
+      font-size: clamp(1.25rem, 2.5vw, 2rem);
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .countdown {
+      color: #68d8a4;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown.warning {
+      color: #ff626b;
+    }
+
+    .countdown.ended {
+      color: #ff626b;
+      font-size: clamp(1.05rem, 2vw, 1.45rem);
+    }
+
+    .controls {
+      padding: clamp(18px, 3vw, 28px);
+      border: 1px solid rgba(188, 207, 228, .14);
+      border-radius: 16px;
+      background: rgba(20, 30, 42, .85);
+    }
+
+    .controls-header {
+      margin: 0 0 18px;
+      color: #d7e2ee;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field label {
+      color: #b8c5d2;
+      font-size: .9rem;
+    }
+
+    .field input {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1px solid #3a4a5c;
+      border-radius: 8px;
+      background: #111a24;
+      color: #fff;
+      accent-color: #67b9ff;
+    }
+
+    .field input:focus-visible,
+    button:focus-visible {
+      outline: 3px solid #67b9ff;
+      outline-offset: 2px;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .storage-status {
+      min-height: 1.4em;
+      margin: 0;
+      color: #9aabba;
+      font-size: .85rem;
+    }
+
+    .fullscreen-button {
+      min-height: 46px;
+      padding: 10px 20px;
+      border: 0;
+      border-radius: 9px;
+      background: #2678c7;
+      color: #fff;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .fullscreen-button:hover {
+      background: #328be0;
+    }
+
+    :fullscreen {
+      background: #101720;
+    }
+
+    :fullscreen .page {
+      width: 100%;
+      min-height: 100vh;
+      justify-content: center;
+      gap: clamp(32px, 8vh, 90px);
+    }
+
+    :fullscreen .controls {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      .exam-info,
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 460px) {
+      .page {
+        gap: 26px;
+      }
+
+      .exam-info {
+        gap: 9px;
+      }
+
+      .info-card {
+        min-height: 94px;
+        padding: 12px 8px;
+      }
+
+      .actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .fullscreen-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="clock-panel" aria-label="目前時間">
+      <p class="date" id="today">載入日期中</p>
+      <h1 class="clock" id="clock" aria-live="off">--:--:--</h1>
+    </section>
+
+    <section class="exam-info" aria-label="考試資訊">
+      <div class="info-card">
+        <span class="info-label">考試科目</span>
+        <span class="info-value" id="showSubject">尚未設定</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">考試時間</span>
+        <span class="info-value" id="showTime">--:-- ～ --:--</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">監考老師</span>
+        <span class="info-value" id="showTeacher">尚未設定</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">應到 / 實到 / 缺考</span>
+        <span class="info-value" id="showAttendance">-- / -- / --</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">距離考試結束</span>
+        <span class="info-value countdown" id="countdown">尚未設定結束時間</span>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="考試設定">
+      <h2 class="controls-header">考試資訊設定</h2>
+      <form id="examForm" autocomplete="off">
+        <div class="form-grid">
+          <div class="field">
+            <label for="subject">考試科目</label>
+            <input id="subject" name="subject" type="text" placeholder="例如：數學">
+          </div>
+          <div class="field">
+            <label for="startTime">開始時間（24 小時制）</label>
+            <input id="startTime" name="startTime" type="time">
+          </div>
+          <div class="field">
+            <label for="endTime">結束時間（24 小時制）</label>
+            <input id="endTime" name="endTime" type="time">
+          </div>
+          <div class="field">
+            <label for="teacher">監考老師</label>
+            <input id="teacher" name="teacher" type="text" placeholder="輸入老師姓名">
+          </div>
+          <div class="field">
+            <label for="expected">應到人數</label>
+            <input id="expected" name="expected" type="number" min="0" step="1" inputmode="numeric" placeholder="人數">
+          </div>
+          <div class="field">
+            <label for="present">實到人數</label>
+            <input id="present" name="present" type="number" min="0" step="1" inputmode="numeric" placeholder="人數">
+          </div>
+        </div>
+        <div class="actions">
+          <p class="storage-status" id="storageStatus" role="status"></p>
+          <button class="fullscreen-button" id="fullscreenButton" type="button">全螢幕</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const storageKey = "exam-clock-settings-v1";
+      const form = document.getElementById("examForm");
+      const fields = {
+        subject: document.getElementById("subject"),
+        startTime: document.getElementById("startTime"),
+        endTime: document.getElementById("endTime"),
+        teacher: document.getElementById("teacher"),
+        expected: document.getElementById("expected"),
+        present: document.getElementById("present")
+      };
+      const storageStatus = document.getElementById("storageStatus");
+      const fullscreenButton = document.getElementById("fullscreenButton");
+
+      function readSettings() {
+        try {
+          const saved = localStorage.getItem(storageKey);
+          if (!saved) return;
+          const settings = JSON.parse(saved);
+          for (const [name, input] of Object.entries(fields)) {
+            if (typeof settings[name] === "string") input.value = settings[name];
+          }
+        } catch (error) {
+          console.error("無法讀取已儲存的考試資訊。", error);
+          storageStatus.textContent = "無法讀取儲存資料，請確認瀏覽器允許使用本機儲存空間。";
+        }
+      }
+
+      function saveSettings() {
+        const settings = {};
+        for (const [name, input] of Object.entries(fields)) {
+          settings[name] = input.value;
+        }
+
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(settings));
+          storageStatus.textContent = "考試資訊已自動儲存於此瀏覽器。";
+        } catch (error) {
+          console.error("無法儲存考試資訊。", error);
+          storageStatus.textContent = "儲存失敗，請確認瀏覽器允許使用本機儲存空間。";
+        }
+        renderExamInfo();
+      }
+
+      function renderExamInfo() {
+        document.getElementById("showSubject").textContent = fields.subject.value.trim() || "尚未設定";
+        document.getElementById("showTeacher").textContent = fields.teacher.value.trim() || "尚未設定";
+        document.getElementById("showTime").textContent =
+          (fields.startTime.value || "--:--") + " ～ " + (fields.endTime.value || "--:--");
+
+        const expected = fields.expected.value === "" ? null : Number(fields.expected.value);
+        const present = fields.present.value === "" ? null : Number(fields.present.value);
+        let attendance = "-- / -- / --";
+        if (expected !== null && present !== null && Number.isFinite(expected) && Number.isFinite(present)) {
+          attendance = expected + " / " + present + " / " + Math.max(0, expected - present);
+        }
+        document.getElementById("showAttendance").textContent = attendance;
+      }
+
+      function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").textContent = [
+          String(now.getHours()).padStart(2, "0"),
+          String(now.getMinutes()).padStart(2, "0"),
+          String(now.getSeconds()).padStart(2, "0")
+        ].join(":");
+        document.getElementById("today").textContent = new Intl.DateTimeFormat("zh-TW", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          weekday: "long"
+        }).format(now);
+        updateCountdown(now);
+      }
+
+      function updateCountdown(now) {
+        const countdown = document.getElementById("countdown");
+        countdown.classList.remove("warning", "ended");
+        if (!fields.endTime.value) {
+          countdown.textContent = "尚未設定結束時間";
+          return;
+        }
+
+        const [hours, minutes] = fields.endTime.value.split(":").map(Number);
+        const end = new Date(now);
+        end.setHours(hours, minutes, 0, 0);
+
+        if (fields.startTime.value) {
+          const [startHours, startMinutes] = fields.startTime.value.split(":").map(Number);
+          if (hours * 60 + minutes < startHours * 60 + startMinutes) {
+            end.setDate(end.getDate() + 1);
+          }
+        }
+
+        const remainingMs = end.getTime() - now.getTime();
+        if (remainingMs <= 0) {
+          countdown.textContent = "考試時間已結束";
+          countdown.classList.add("ended");
+          return;
+        }
+
+        const remainingMinutes = Math.ceil(remainingMs / 60000);
+        countdown.textContent = remainingMinutes + " 分鐘";
+        if (remainingMs <= 10 * 60 * 1000) countdown.classList.add("warning");
+      }
+
+      function updateFullscreenButton() {
+        fullscreenButton.textContent = document.fullscreenElement ? "離開全螢幕" : "全螢幕";
+      }
+
+      async function toggleFullscreen() {
+        try {
+          if (document.fullscreenElement) {
+            await document.exitFullscreen();
+          } else if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+          } else {
+            storageStatus.textContent = "此瀏覽器不支援全螢幕模式。";
+          }
+        } catch (error) {
+          console.error("無法切換全螢幕模式。", error);
+          storageStatus.textContent = "無法切換全螢幕，請確認瀏覽器允許此操作。";
+        }
+      }
+
+      readSettings();
+      renderExamInfo();
+      updateClock();
+      window.setInterval(updateClock, 1000);
+      form.addEventListener("input", saveSettings);
+      fullscreenButton.addEventListener("click", toggleFullscreen);
+      document.addEventListener("fullscreenchange", updateFullscreenButton);
+    })();
+  </script>
+</body>
+</html>
